@@ -4,6 +4,9 @@
 #include <map>
 #include <chrono>
 #include <vector>
+#include <memory>
+#include <algorithm>
+#include <queue>
 
 bool oneLetterDifference(const std::wstring &w1, const std::wstring &w2)
 {
@@ -37,6 +40,26 @@ private:
         Node(size_t index, const std::wstring &value)
                 : index(index), value(value)
         {
+        }
+
+        size_t getIndex(void) const
+        {
+            return index;
+        }
+
+        const std::wstring &getValue() const
+        {
+            return value;
+        }
+
+        const std::vector<size_t> &getNeighbors() const
+        {
+            return neighbors;
+        }
+
+        bool eqStr(const std::wstring &str) const
+        {
+            return str == value;
         }
 
         void tryToAddNeighbor(Node &node)
@@ -80,7 +103,7 @@ public:
             nodes.push_back(cur);
         }
         auto endTime = std::chrono::high_resolution_clock::now() - startTime;
-        std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::milliseconds>(endTime).count() << " milliseconds" << std::endl;
+        std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
     }
 
     void print()
@@ -90,11 +113,61 @@ public:
             node.print();
         }
     }
+    
+    std::vector<std::wstring> search(const std::wstring &w1, const std::wstring &w2)
+    {
+        if(nodes.empty())
+        {
+            build();
+        }
+
+        //print();
+        typedef std::vector<size_t> Chain;
+
+        auto startTime = std::chrono::high_resolution_clock::now();
+        auto start_node = std::find_if(nodes.begin(), nodes.end(), [&w1](const Node &node) -> bool {return node.eqStr(w1);});
+        if(start_node != nodes.end())
+        {
+            std::queue<Chain> queue;
+            Chain chain;
+            chain.push_back(start_node->getIndex());
+            queue.push(chain);
+            while (!queue.empty())
+            {
+                auto &q = queue.front();
+                size_t node_index = q.back();
+                for(auto n : nodes[node_index].getNeighbors())
+                {
+                    if(nodes[n].eqStr(w2))
+                    {
+                        std::vector<std::wstring> result;
+                        for(auto i : q)
+                        {
+                            result.push_back(nodes[i].getValue());
+                        }
+                        result.push_back(w2);
+                        auto endTime = std::chrono::high_resolution_clock::now() - startTime;
+                        std::wcout << "Search: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
+                        return result;
+                    }
+
+                    Chain new_chain(q);
+                    new_chain.push_back(n);
+                    queue.push(new_chain);
+                }
+                queue.pop();
+            }
+        }   
+        auto endTime = std::chrono::high_resolution_clock::now() - startTime;
+        std::wcout << "Search: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
+        return std::vector<std::wstring>();
+    }
 };
 
 class Dictionary {
 private:
     std::map<size_t, std::set<std::wstring>> wordsets;
+    std::map<size_t, std::unique_ptr<Graph>> graphs;
 public:
     Dictionary(const std::string &file_name)
     {
@@ -112,21 +185,74 @@ public:
 
             for (auto &wordset : wordsets)
             {
-                Graph *graph = new Graph(wordset.second);
-                graph->build();
-                graph->print();
-                delete graph;
+                std::unique_ptr<Graph> graph(new Graph(wordset.second));
+                graphs[wordset.first] = std::move(graph);                
             }
         }
     }
+
+    std::vector<std::wstring> search(const std::wstring &w1, const std::wstring &w2)
+    {
+        size_t length = w1.length();
+
+        std::vector<std::wstring> result;
+
+        if(length != w2.length())
+        {
+            std::wcout << "Разная длинна слов" << std::endl;
+            return std::move(result);
+        }
+
+        if(wordsets.find(length) == wordsets.end())
+        {
+            std::wcout << "Нет слов данной длинны" << std::endl;
+            return std::move(result);
+        }
+
+        if(graphs.find(length) == graphs.end())
+        {
+            std::wcout << "Нет графа для слов данной длинны" << std::endl;
+            return std::move(result);
+        }
+
+        if(wordsets[length].find(w1) == wordsets[length].end())
+        {
+            std::wcout << "В словаре нет слова: " << w1 << std::endl;
+            return std::move(result);
+        }
+
+        if(wordsets[length].find(w2) == wordsets[length].end())
+        {
+            std::wcout << "В словаре нет слова: " << w2 << std::endl;
+            return std::move(result);
+        }
+
+        auto &g = graphs[length];
+        return g->search(w1, w2);
+    }
 };
+
+void printSearchResult(const std::vector<std::wstring> &result)
+{
+    for(auto &str : result)
+    {
+        std::wcout << str << std::endl;
+    }
+}
 
 int main()
 {
     std::setlocale(LC_ALL, "en_US.UTF-8");
-    //std::string dictionary_file_name = "/usr/share/dict/words";
-    std::string dictionary_file_name = "/home/dhmhd/Projects/elephant-fly/words";
+    std::string dictionary_file_name = "/usr/share/dict/words";
+    //std::string dictionary_file_name = "/home/dhmhd/Projects/elephant-fly/words";
     Dictionary dictionary(dictionary_file_name);
+
+    printSearchResult(dictionary.search(L"top", L"hot"));
+    printSearchResult(dictionary.search(L"stop", L"flag"));
+    printSearchResult(dictionary.search(L"clock", L"store"));
+    printSearchResult(dictionary.search(L"store", L"clock"));
+    printSearchResult(dictionary.search(L"ledges", L"poking"));
+    printSearchResult(dictionary.search(L"poking", L"ledges"));
 
     return 0;
 }
