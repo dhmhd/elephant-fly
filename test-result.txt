@@ -1,0 +1,82 @@
+Graph build: 29065 microseconds
+Search: 138 microseconds
+top
+hop
+hot
+Graph build: 479732 microseconds
+Search: 581 microseconds
+stop
+slop
+flop
+flap
+flag
+Graph build: 1939461 microseconds
+Search: 788 microseconds
+clock
+chock
+shock
+stock
+stork
+store
+Search: 1775 microseconds
+store
+stork
+stock
+shock
+chock
+clock
+Graph build: 5359986 microseconds
+Search: 37215 microseconds
+ledges
+ledger
+lodger
+longer
+linger
+singer
+singes
+sing's
+wing's
+wine's
+wane's
+wave's
+have's
+havens
+mavens
+mavins
+matins
+mating
+making
+caking
+coking
+poking
+Search: 33082 microseconds
+poking
+coking
+caking
+making
+mating
+matins
+mavins
+mavens
+havens
+have's
+Dave's
+Dane's
+bane's
+bang's
+bung's
+lung's
+lunges
+lunged
+longed
+lodged
+lodges
+ledges
+Search: 3106 microseconds
+left
+lift
+life
+lime
+mime
+Search: 976 microseconds
+Search: 705 microseconds

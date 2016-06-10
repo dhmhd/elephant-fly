@@ -128,6 +128,7 @@ public:
         auto start_node = std::find_if(nodes.begin(), nodes.end(), [&w1](const Node &node) -> bool {return node.eqStr(w1);});
         if(start_node != nodes.end())
         {
+            std::set<std::wstring> visided;
             std::queue<Chain> queue;
             Chain chain;
             chain.push_back(start_node->getIndex());
@@ -150,10 +151,13 @@ public:
                         std::wcout << "Search: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
                         return result;
                     }
-
-                    Chain new_chain(q);
-                    new_chain.push_back(n);
-                    queue.push(new_chain);
+                    if(visided.find(nodes[n].getValue()) == visided.end())
+                    {
+                        visided.insert(nodes[n].getValue());
+                        Chain new_chain(q);
+                        new_chain.push_back(n);
+                        queue.push(new_chain);
+                    }
                 }
                 queue.pop();
             }
@@ -253,6 +257,9 @@ int main()
     printSearchResult(dictionary.search(L"store", L"clock"));
     printSearchResult(dictionary.search(L"ledges", L"poking"));
     printSearchResult(dictionary.search(L"poking", L"ledges"));
+    printSearchResult(dictionary.search(L"left", L"mime"));
+    printSearchResult(dictionary.search(L"single", L"simple"));
+    printSearchResult(dictionary.search(L"simple", L"single"));
 
     return 0;
 }
