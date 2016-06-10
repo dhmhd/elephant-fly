@@ -2,7 +2,8 @@
 #include <set>
 #include <fstream>
 #include <map>
-#include <algorithm>
+#include <chrono>
+#include <vector>
 
 bool oneLetterDifference(const std::wstring &w1, const std::wstring &w2)
 {
@@ -25,6 +26,72 @@ bool oneLetterDifference(const std::wstring &w1, const std::wstring &w2)
     return flag;
 }
 
+class Graph {
+private:
+    class Node {
+    private:
+        const size_t index;
+        const std::wstring &value;
+        std::vector<size_t> neighbors;
+    public:
+        Node(size_t index, const std::wstring &value)
+                : index(index), value(value)
+        {
+        }
+
+        void tryToAddNeighbor(Node &node)
+        {
+            // std::wcout << "[d]" << value << " ~ " << node.value << std::endl;
+            if(oneLetterDifference(node.value, value))
+            {
+                neighbors.push_back(node.index);
+                node.neighbors.push_back(index);
+            }
+        }
+
+        void print()
+        {
+            std::wcout << "Node: " << index << "[" << value << "]" << std::endl;
+            for(auto n : neighbors)
+            {
+                std::wcout << "\t" << n << std::endl;
+            }
+        }
+    };
+
+    const std::set<std::wstring> &words;
+    std::vector<Node> nodes;
+public:
+    Graph(const std::set<std::wstring> &words)
+            : words(words)
+    {
+    }
+
+    void build()
+    {
+        auto startTime = std::chrono::high_resolution_clock::now();
+        for(auto &word : words)
+        {
+            Node cur(nodes.size(), word);
+            for(auto &node : nodes)
+            {
+                cur.tryToAddNeighbor(node);
+            }
+            nodes.push_back(cur);
+        }
+        auto endTime = std::chrono::high_resolution_clock::now() - startTime;
+        std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::milliseconds>(endTime).count() << " milliseconds" << std::endl;
+    }
+
+    void print()
+    {
+        for(auto &node : nodes)
+        {
+            node.print();
+        }
+    }
+};
+
 class Dictionary {
 private:
     std::map<size_t, std::set<std::wstring>> wordsets;
@@ -37,8 +104,18 @@ public:
         {
             for (std::wstring word; std::getline(input, word);)
             {
-                std::transform(word.begin(), word.end(), word.begin(), ::tolower);
+                // std::transform(word.begin(), word.end(), word.begin(), ::tolower);
+                // Алфавит не указан в условиях задачи, поэтому включаю все возможные символы:
+                // заглавные, строчные, знаки препинания, пробелы...
                 wordsets[word.length()].insert(word);
+            }
+
+            for (auto &wordset : wordsets)
+            {
+                Graph *graph = new Graph(wordset.second);
+                graph->build();
+                graph->print();
+                delete graph;
             }
         }
     }
@@ -50,17 +127,6 @@ int main()
     //std::string dictionary_file_name = "/usr/share/dict/words";
     std::string dictionary_file_name = "/home/dhmhd/Projects/elephant-fly/words";
     Dictionary dictionary(dictionary_file_name);
-
-    std::wcout << (oneLetterDifference(L"foo", L"bar") == false) << std::endl;
-    std::wcout << (oneLetterDifference(L"foo", L"boo") == true) << std::endl;
-    std::wcout << (oneLetterDifference(L"fof", L"bof") == true) << std::endl;
-    std::wcout << (oneLetterDifference(L"fof", L"boo") == false) << std::endl;
-    std::wcout << (oneLetterDifference(L"fof0", L"bof0") == true) << std::endl;
-    std::wcout << (oneLetterDifference(L"fof0", L"boo0") == false) << std::endl;
-    std::wcout << (oneLetterDifference(L"sof0", L"bof0") == true) << std::endl;
-    std::wcout << (oneLetterDifference(L"f1f0", L"boo0") == false) << std::endl;
-    std::wcout << (oneLetterDifference(L"asfoff", L"asboff") == true) << std::endl;
-    std::wcout << (oneLetterDifference(L"asoff", L"asoxf") == true) << std::endl;
 
     return 0;
 }
