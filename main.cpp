@@ -2,7 +2,7 @@
 #include <set>
 #include <fstream>
 #include <map>
-#include <chrono>
+//#include <chrono>
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -106,7 +106,7 @@ public:
 
     void build()
     {
-        auto startTime = std::chrono::high_resolution_clock::now();
+        // auto startTime = std::chrono::high_resolution_clock::now();
         for(auto &word : words)
         {
             Node cur(nodes.size(), word);
@@ -116,8 +116,8 @@ public:
             }
             nodes.push_back(cur);
         }
-        auto endTime = std::chrono::high_resolution_clock::now() - startTime;
-        std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
+        // auto endTime = std::chrono::high_resolution_clock::now() - startTime;
+        // std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
     }
 
     void print()
@@ -172,7 +172,7 @@ public:
             return left.getPriority() > right.getPriority();
         };
 
-        auto startTime = std::chrono::high_resolution_clock::now();
+        // auto startTime = std::chrono::high_resolution_clock::now();
         auto start_node = std::find_if(nodes.begin(), nodes.end(), [&w1](const Node &node) -> bool {return node.eqStr(w1);});
         if(start_node != nodes.end())
         {
@@ -196,8 +196,8 @@ public:
                             result.push_back(nodes[i].getValue());
                         }
                         result.push_back(w2);
-                        auto endTime = std::chrono::high_resolution_clock::now() - startTime;
-                        std::wcout << "Search: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
+                        // auto endTime = std::chrono::high_resolution_clock::now() - startTime;
+                        // std::wcout << "Search[+]: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
                         return result;
                     }
                     if(visided.find(nodes[n].getValue()) == visided.end())
@@ -211,8 +211,8 @@ public:
             }
         }
 
-        auto endTime = std::chrono::high_resolution_clock::now() - startTime;
-        std::wcout << "Search: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
+        // auto endTime = std::chrono::high_resolution_clock::now() - startTime;
+        // std::wcout << "Search[-]: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
         return std::vector<std::wstring>();
     }
 };
