@@ -293,22 +293,62 @@ void printSearchResult(const std::vector<std::wstring> &result)
     }
 }
 
-int main()
+void printUsage(char *str)
+{
+    std::wcout << "Usage: " << str << " input_file dictionary_file" << std::endl;
+    std::wcout << std::endl;
+
+}
+
+int main(int argc, char *argv[])
 {
     std::setlocale(LC_ALL, "en_US.UTF-8");
-    std::string dictionary_file_name = "/usr/share/dict/words";
-    //std::string dictionary_file_name = "/home/dhmhd/Projects/elephant-fly/words";
+
+    if(argc < 3)
+    {
+        printUsage(argv[0]);
+    }
+
+    // std::string dictionary_file_name = "/usr/share/dict/words";
+    // std::string dictionary_file_name = "/home/dhmhd/Projects/elephant-fly/words";
+    std::string dictionary_file_name = argv[2];
     Dictionary dictionary(dictionary_file_name);
 
-    printSearchResult(dictionary.search(L"top", L"hot"));
-    printSearchResult(dictionary.search(L"stop", L"flag"));
-    printSearchResult(dictionary.search(L"clock", L"store"));
-    printSearchResult(dictionary.search(L"store", L"clock"));
-    printSearchResult(dictionary.search(L"ledges", L"poking"));
-    printSearchResult(dictionary.search(L"poking", L"ledges"));
-    printSearchResult(dictionary.search(L"left", L"mime"));
-    printSearchResult(dictionary.search(L"single", L"simple"));
-    printSearchResult(dictionary.search(L"simple", L"single"));
+    std::wstring w[2];
+    std::string input_file_name = argv[1];
+    std::wifstream input(input_file_name);
+    input.imbue(std::locale("en_US.UTF-8"));
+    if(input.is_open())
+    {
+        int i = 0;
+        for (std::wstring word; std::getline(input, word) || i < 2; i++)
+        {
+            w[i] = word;
+        }
+        auto r = dictionary.search(w[0], w[1]);
+        if(r.size() == 0)
+        {
+            std::wcout << "Цепочки не существует" << std::endl;
+        }
+        else
+        {
+            printSearchResult(r);
+        }
+    }
+    else
+    {
+        std::wcout << "Проблемы при открытии файла" << std::endl;
+    }
+
+    // printSearchResult(dictionary.search(L"top", L"hot"));
+    // printSearchResult(dictionary.search(L"stop", L"flag"));
+    // printSearchResult(dictionary.search(L"clock", L"store"));
+    // printSearchResult(dictionary.search(L"store", L"clock"));
+    // printSearchResult(dictionary.search(L"ledges", L"poking"));
+    // printSearchResult(dictionary.search(L"poking", L"ledges"));
+    // printSearchResult(dictionary.search(L"left", L"mime"));
+    // printSearchResult(dictionary.search(L"single", L"simple"));
+    // printSearchResult(dictionary.search(L"simple", L"single"));
 
     return 0;
 }
