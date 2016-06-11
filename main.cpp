@@ -134,13 +134,41 @@ public:
             build();
         }
 
-        typedef std::vector<size_t> Chain;
+        class Chain {
+        private:
+            std::vector<size_t> chain;
+            size_t priority;
+        public:
+            size_t back() const
+            {
+                return chain.back();
+            }
 
-        auto comparator = [this, &w2](const Chain &left, const Chain &right) -> bool
+            void push(size_t index, size_t diff)
+            {
+                chain.push_back(index);
+                priority = chain.size() + diff;
+            }
+
+            size_t getPriority() const
+            {
+                return priority;
+            }
+
+            std::vector<size_t>::iterator begin()
+            {
+                return chain.begin();
+            }
+
+            std::vector<size_t>::iterator end()
+            {
+                return chain.end();
+            }
+        };
+
+        auto comparator = [](const Chain &left, const Chain &right) -> bool
         {
-            size_t left_value = left.size() + differentLetters(w2, nodes[left.back()].getValue());
-            size_t right_value = right.size() + differentLetters(w2, nodes[right.back()].getValue());
-            return left_value > right_value;
+            return left.getPriority() > right.getPriority();
         };
 
         auto startTime = std::chrono::high_resolution_clock::now();
@@ -150,7 +178,7 @@ public:
             std::priority_queue<Chain, std::vector<Chain>, decltype(comparator)> queue(comparator);
             std::set<std::wstring> visided;
             Chain chain;
-            chain.push_back(start_node->getIndex());
+            chain.push(start_node->getIndex(), differentLetters(w2, w1));
             queue.push(chain);
             while (!queue.empty())
             {
@@ -175,7 +203,7 @@ public:
                     {
                         visided.insert(nodes[n].getValue());
                         Chain new_chain(q);
-                        new_chain.push_back(n);
+                        new_chain.push(n, differentLetters(w2, nodes[n].getValue()));
                         queue.push(new_chain);
                     }
                 }
