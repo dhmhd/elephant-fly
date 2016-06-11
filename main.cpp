@@ -106,18 +106,22 @@ public:
 
     void build()
     {
-        // auto startTime = std::chrono::high_resolution_clock::now();
-        for(auto &word : words)
+        if(nodes.empty())
         {
-            Node cur(nodes.size(), word);
-            for(auto &node : nodes)
+            // auto startTime = std::chrono::high_resolution_clock::now();
+            // Медленная часть...
+            for(auto &word : words)
             {
-                cur.tryToAddNeighbor(node);
+                Node cur(nodes.size(), word);
+                for(auto &node : nodes)
+                {
+                    cur.tryToAddNeighbor(node);
+                }
+                nodes.push_back(cur);
             }
-            nodes.push_back(cur);
+            // auto endTime = std::chrono::high_resolution_clock::now() - startTime;
+            // std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
         }
-        // auto endTime = std::chrono::high_resolution_clock::now() - startTime;
-        // std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
     }
 
     void print()
@@ -130,13 +134,11 @@ public:
     
     std::vector<std::wstring> search(const std::wstring &w1, const std::wstring &w2)
     {
-        if(nodes.empty())
-        {
-            build();
-        }
+        build();
 
         class Chain {
         private:
+            // TODO: Постоянное копирование этого вектора!
             std::vector<size_t> chain;
             size_t priority;
         public:
@@ -181,6 +183,7 @@ public:
             Chain chain;
             chain.push(start_node->getIndex(), differentLetters(w2, w1));
             queue.push(chain);
+            // TODO: Распараллелить с блокировкой visited...
             while (!queue.empty())
             {
                 auto q = queue.top();
@@ -242,6 +245,10 @@ public:
                 graphs[wordset.first] = std::move(graph);                
             }
         }
+        else
+        {
+            std::wcout << L"Проблемы при открытии файла словаря" << std::endl;
+        }
     }
 
     std::vector<std::wstring> search(const std::wstring &w1, const std::wstring &w2)
@@ -252,31 +259,31 @@ public:
 
         if(length != w2.length())
         {
-            std::wcout << "Разная длинна слов" << std::endl;
+            std::wcout << L"Разная длинна слов" << std::endl;
             return std::move(result);
         }
 
         if(wordsets.find(length) == wordsets.end())
         {
-            std::wcout << "Нет слов данной длинны" << std::endl;
+            std::wcout << L"Нет слов данной длинны" << std::endl;
             return std::move(result);
         }
 
         if(graphs.find(length) == graphs.end())
         {
-            std::wcout << "Нет графа для слов данной длинны" << std::endl;
+            std::wcout << L"Нет графа для слов данной длинны" << std::endl;
             return std::move(result);
         }
 
         if(wordsets[length].find(w1) == wordsets[length].end())
         {
-            std::wcout << "В словаре нет слова: " << w1 << std::endl;
+            std::wcout << L"В словаре нет слова: " << w1 << std::endl;
             return std::move(result);
         }
 
         if(wordsets[length].find(w2) == wordsets[length].end())
         {
-            std::wcout << "В словаре нет слова: " << w2 << std::endl;
+            std::wcout << L"В словаре нет слова: " << w2 << std::endl;
             return std::move(result);
         }
 
@@ -321,14 +328,14 @@ int main(int argc, char *argv[])
     if(input.is_open())
     {
         int i = 0;
-        for (std::wstring word; std::getline(input, word) || i < 2; i++)
+        for (std::wstring word; std::getline(input, word) && i < 2; i++)
         {
             w[i] = word;
         }
         auto r = dictionary.search(w[0], w[1]);
         if(r.size() == 0)
         {
-            std::wcout << "Цепочки не существует" << std::endl;
+            std::wcout << L"Цепочки не существует" << std::endl;
         }
         else
         {
@@ -337,7 +344,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        std::wcout << "Проблемы при открытии файла" << std::endl;
+        std::wcout << L"Проблемы при открытии файла" << std::endl;
     }
 
     // printSearchResult(dictionary.search(L"top", L"hot"));
