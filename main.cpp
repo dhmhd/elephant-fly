@@ -29,6 +29,19 @@ bool oneLetterDifference(const std::wstring &w1, const std::wstring &w2)
     return flag;
 }
 
+size_t differentLetters(const std::wstring &w1, const std::wstring &w2)
+{
+    size_t count = 0;
+    for(auto i1 = w1.cbegin(), i2 = w2.cbegin(); i1 != w1.cend() && i2 != w2.cend(); i1++, i2++)
+    {
+        if(*i1 != *i2)
+        {
+            ++count;
+        }
+    }
+    return count;
+}
+
 class Graph {
 private:
     class Node {
@@ -121,23 +134,30 @@ public:
             build();
         }
 
-        //print();
         typedef std::vector<size_t> Chain;
+
+        auto comparator = [this, &w2](const Chain &left, const Chain &right) -> bool
+        {
+            size_t left_value = left.size() + differentLetters(w2, nodes[left.back()].getValue());
+            size_t right_value = right.size() + differentLetters(w2, nodes[right.back()].getValue());
+            return left_value > right_value;
+        };
 
         auto startTime = std::chrono::high_resolution_clock::now();
         auto start_node = std::find_if(nodes.begin(), nodes.end(), [&w1](const Node &node) -> bool {return node.eqStr(w1);});
         if(start_node != nodes.end())
         {
+            std::priority_queue<Chain, std::vector<Chain>, decltype(comparator)> queue(comparator);
             std::set<std::wstring> visided;
-            std::queue<Chain> queue;
             Chain chain;
             chain.push_back(start_node->getIndex());
             queue.push(chain);
             while (!queue.empty())
             {
-                auto &q = queue.front();
-                size_t node_index = q.back();
-                for(auto n : nodes[node_index].getNeighbors())
+                auto q = queue.top();
+                queue.pop();
+                auto index = q.back();
+                for (auto n : nodes[index].getNeighbors())
                 {
                     if(nodes[n].eqStr(w2))
                     {
@@ -159,9 +179,9 @@ public:
                         queue.push(new_chain);
                     }
                 }
-                queue.pop();
             }
-        }   
+        }
+
         auto endTime = std::chrono::high_resolution_clock::now() - startTime;
         std::wcout << "Search: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
         return std::vector<std::wstring>();
