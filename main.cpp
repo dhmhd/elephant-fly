@@ -7,6 +7,7 @@
 #include <memory>
 #include <algorithm>
 #include <queue>
+#include <unordered_set>
 
 bool oneLetterDifference(const std::wstring &w1, const std::wstring &w2)
 {
@@ -176,7 +177,7 @@ public:
         if(start_node != nodes.end())
         {
             std::priority_queue<Chain, std::vector<Chain>, decltype(comparator)> queue(comparator);
-            std::set<std::wstring> visided;
+            std::unordered_set<std::wstring> visided;
             Chain chain;
             chain.push(start_node->getIndex(), differentLetters(w2, w1));
             queue.push(chain);

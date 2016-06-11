@@ -1,32 +1,32 @@
-Graph build: 31286 microseconds
-Search: 115 microseconds
+Graph build: 31072 microseconds
+Search: 164 microseconds
 top
 hop
 hot
-Graph build: 470867 microseconds
-Search: 234 microseconds
+Graph build: 487947 microseconds
+Search: 224 microseconds
 stop
 slop
 flop
 flog
 flag
-Graph build: 1902072 microseconds
-Search: 221 microseconds
+Graph build: 1985259 microseconds
+Search: 216 microseconds
 clock
 chock
 shock
 stock
 stork
 store
-Search: 365 microseconds
+Search: 361 microseconds
 store
 stork
 stock
 shock
 chock
 clock
-Graph build: 5347252 microseconds
-Search: 55334 microseconds
+Graph build: 5489224 microseconds
+Search: 31816 microseconds
 ledges
 lodges
 lodged
@@ -49,7 +49,7 @@ making
 miking
 piking
 poking
-Search: 27570 microseconds
+Search: 19442 microseconds
 poking
 piking
 miking
@@ -72,11 +72,11 @@ logged
 lodged
 lodges
 ledges
-Search: 412 microseconds
+Search: 295 microseconds
 left
 lift
 life
 lime
 mime
-Search: 1244 microseconds
-Search: 712 microseconds
+Search: 1106 microseconds
+Search: 693 microseconds
