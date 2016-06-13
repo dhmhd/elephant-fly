@@ -2,4 +2,6 @@
 
 ## Usage
 
+```
 $ ./elephant-fly input words
+```
