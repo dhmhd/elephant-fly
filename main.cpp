@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <set>
 #include <fstream>
 #include <map>
@@ -10,6 +10,26 @@
 #include <unordered_set>
 #include <thread>
 #include <mutex>
+#include <string>
+#include <clocale>
+
+#ifdef _WIN32
+#define USE_CODECVT 1
+#elif __linux__
+#define USE_CODECVT 0
+#elif __unix__
+#define USE_CODECVT 0
+#elif defined(_POSIX_VERSION)
+#define USE_CODECVT 0
+#else
+#error "Unknown compiler"
+#endif
+
+#if USE_CODECVT
+#include <codecvt>
+#include <locale>
+#endif 
+
 
 bool oneLetterDifference(const std::wstring &w1, const std::wstring &w2)
 {
@@ -91,7 +111,7 @@ private:
 
         bool eqStr(const std::wstring &str) const
         {
-            return str == value;
+            return str.compare(value) == 0;
         }
 
         bool isOneLetterDiff(Node &node) const
@@ -110,7 +130,7 @@ private:
 
         void print() const
         {
-            std::wcout << "Node: " << index << "[" << value << "]" << std::endl;
+            std::wcout << L"Node: " << index << L"[" << value << L"]" << std::endl;
             for(auto n : neighbors)
             {
                 std::wcout << "\t" << n << std::endl;
@@ -283,7 +303,12 @@ public:
     Dictionary(const std::string &file_name)
     {
         std::wifstream input(file_name);
-        input.imbue(std::locale("en_US.UTF-8"));
+        #if USE_CODECVT
+            std::locale ru(std::locale(), new std::codecvt_utf8<wchar_t>);
+        #else
+            std::locale ru("en_US.UTF-8")
+        #endif
+        input.imbue(ru);
         if(input.is_open())
         {
             for (std::wstring word; std::getline(input, word);)
@@ -359,16 +384,21 @@ void printUsage(char *str)
 {
     std::wcout << "Usage: " << str << " input_file dictionary_file" << std::endl;
     std::wcout << std::endl;
-
 }
 
 int main(int argc, char *argv[])
 {
-    std::setlocale(LC_ALL, "en_US.UTF-8");
+    std::setlocale(LC_ALL, "Russian");
+    #if USE_CODECVT
+        std::locale ru(std::locale(), new std::codecvt_utf8<wchar_t>());
+    #else
+        std::locale ru("en_US.UTF-8")
+    #endif
 
     if(argc < 3)
     {
         printUsage(argv[0]);
+        return 0;
     }
 
     // std::string dictionary_file_name = "/usr/share/dict/words";
@@ -379,7 +409,7 @@ int main(int argc, char *argv[])
     std::wstring w[2];
     std::string input_file_name = argv[1];
     std::wifstream input(input_file_name);
-    input.imbue(std::locale("en_US.UTF-8"));
+    input.imbue(ru);
     if(input.is_open())
     {
         int i = 0;
