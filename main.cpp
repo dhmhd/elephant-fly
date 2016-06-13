@@ -2,13 +2,14 @@
 #include <set>
 #include <fstream>
 #include <map>
-#include <chrono>
+//#include <chrono>
 #include <vector>
 #include <memory>
 #include <algorithm>
 #include <queue>
 #include <unordered_set>
-#include <future>
+#include <thread>
+#include <mutex>
 
 bool oneLetterDifference(const std::wstring &w1, const std::wstring &w2)
 {
@@ -95,13 +96,15 @@ private:
 
         bool isOneLetterDiff(Node &node) const
         {
-            return index != node.index && oneLetterDifference(value, node.value);
+            // return index != node.index && oneLetterDifference(value, node.value);
+            return oneLetterDifference(value, node.value);
         }
 
         void addNeighbor(Node &node)
         {
-            std::lock_guard<std::mutex> lock(mutex);
+            mutex.lock();
             neighbors.push_back(node.index);
+            mutex.unlock();
             node.addNeighbor(index);
         }
 
@@ -131,10 +134,7 @@ public:
     {
         if(!isBuilded)
         {
-            isBuilded = true;
-
-            auto startTime = std::chrono::high_resolution_clock::now();
-
+//            auto startTime = std::chrono::high_resolution_clock::now();
             size_t thread_count = std::thread::hardware_concurrency();
             size_t words_count = nodes.size();
             size_t nodes_per_thread = words_count / thread_count + 1;
@@ -144,9 +144,6 @@ public:
                 thread_count = words_count / (NPS_MAX - 1) + 1;
                 nodes_per_thread = NPS_MAX;
             }
-//            std::wcout << "Threads avaliable: " << thread_count << std::endl;
-//            std::wcout << "Words count: " << words_count << std::endl;
-//            std::wcout << "Nodes per thread: " << nodes_per_thread << std::endl;
             std::vector<std::thread> threads;
             for(size_t i = 0; i < thread_count; ++i)
             {
@@ -158,7 +155,6 @@ public:
                 }
                 auto fnk = [this](size_t start, size_t end) -> void
                 {
-//                    std::wcout << "START: from " << start << " to " << (end - 1) << std::endl;
                     for(size_t i = start; i < end; ++i)
                     {
                         auto &ni = nodes[i];
@@ -171,7 +167,6 @@ public:
                             }
                         }
                     }
-//                    std::wcout << "STOP: from " << start << " to " << (end - 1) << std::endl;
                 };
                 threads.push_back(std::thread(fnk, start, end));
             }
@@ -179,9 +174,9 @@ public:
             {
                 thread.join();
             }
-
-            auto endTime = std::chrono::high_resolution_clock::now() - startTime;
-            std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
+            isBuilded = true;
+            // auto endTime = std::chrono::high_resolution_clock::now() - startTime;
+            // std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
         }
     }
 
@@ -244,7 +239,6 @@ public:
             Chain chain;
             chain.push(start_node->getIndex(), differentLetters(w2, w1));
             queue.push(chain);
-            // TODO: Распараллелить с блокировкой visited...
             while (!queue.empty())
             {
                 auto q = queue.top();
