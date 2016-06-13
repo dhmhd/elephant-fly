@@ -14,9 +14,9 @@
 bool oneLetterDifference(const std::wstring &w1, const std::wstring &w2)
 {
     bool flag = false;
-    for(auto i1 = w1.cbegin(), i2 = w2.cbegin(); i1 != w1.cend() && i2 != w2.cend(); i1++, i2++)
+    for(size_t i = 0; i < w1.length(); ++i)
     {
-        if(*i1 != *i2)
+        if(w1[i] != w2[i])
         {
             if(!flag)
             {
@@ -35,9 +35,9 @@ bool oneLetterDifference(const std::wstring &w1, const std::wstring &w2)
 size_t differentLetters(const std::wstring &w1, const std::wstring &w2)
 {
     size_t count = 0;
-    for(auto i1 = w1.cbegin(), i2 = w2.cbegin(); i1 != w1.cend() && i2 != w2.cend(); i1++, i2++)
+    for(size_t i = 0; i < w1.length(); ++i)
     {
-        if(*i1 != *i2)
+        if(w1[i] != w2[i])
         {
             ++count;
         }
@@ -138,7 +138,7 @@ public:
             size_t thread_count = std::thread::hardware_concurrency();
             size_t words_count = nodes.size();
             size_t nodes_per_thread = words_count / thread_count + 1;
-            size_t const NPS_MAX = 500;
+            size_t const NPS_MAX = 250;
             if(nodes_per_thread > NPS_MAX)
             {
                 thread_count = words_count / (NPS_MAX - 1) + 1;
