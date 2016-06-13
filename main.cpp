@@ -2,12 +2,13 @@
 #include <set>
 #include <fstream>
 #include <map>
-//#include <chrono>
+#include <chrono>
 #include <vector>
 #include <memory>
 #include <algorithm>
 #include <queue>
 #include <unordered_set>
+#include <future>
 
 bool oneLetterDifference(const std::wstring &w1, const std::wstring &w2)
 {
@@ -49,11 +50,26 @@ private:
     private:
         const size_t index;
         const std::wstring &value;
+        mutable std::mutex mutex;
         std::vector<size_t> neighbors;
+
+        void addNeighbor(size_t node_index)
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            neighbors.push_back(node_index);
+        }
+
     public:
         Node(size_t index, const std::wstring &value)
                 : index(index), value(value)
         {
+        }
+
+        Node(const Node &node)
+            : index(node.index), value(node.value)
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            neighbors = node.neighbors;
         }
 
         size_t getIndex(void) const
@@ -68,6 +84,7 @@ private:
 
         const std::vector<size_t> &getNeighbors() const
         {
+            std::lock_guard<std::mutex> lock(mutex);
             return neighbors;
         }
 
@@ -76,17 +93,19 @@ private:
             return str == value;
         }
 
-        void tryToAddNeighbor(Node &node)
+        bool isOneLetterDiff(Node &node) const
         {
-            // std::wcout << "[d]" << value << " ~ " << node.value << std::endl;
-            if(oneLetterDifference(node.value, value))
-            {
-                neighbors.push_back(node.index);
-                node.neighbors.push_back(index);
-            }
+            return index != node.index && oneLetterDifference(value, node.value);
         }
 
-        void print()
+        void addNeighbor(Node &node)
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            neighbors.push_back(node.index);
+            node.addNeighbor(index);
+        }
+
+        void print() const
         {
             std::wcout << "Node: " << index << "[" << value << "]" << std::endl;
             for(auto n : neighbors)
@@ -96,31 +115,73 @@ private:
         }
     };
 
-    const std::set<std::wstring> &words;
     std::vector<Node> nodes;
+    bool isBuilded;
 public:
     Graph(const std::set<std::wstring> &words)
-            : words(words)
+        : isBuilded(false)
     {
+        for(auto &word : words)
+        {
+            nodes.push_back(Node(nodes.size(), word));
+        }
     }
 
     void build()
     {
-        if(nodes.empty())
+        if(!isBuilded)
         {
-            // auto startTime = std::chrono::high_resolution_clock::now();
-            // Медленная часть...
-            for(auto &word : words)
+            isBuilded = true;
+
+            auto startTime = std::chrono::high_resolution_clock::now();
+
+            size_t thread_count = std::thread::hardware_concurrency();
+            size_t words_count = nodes.size();
+            size_t nodes_per_thread = words_count / thread_count + 1;
+            size_t const NPS_MAX = 500;
+            if(nodes_per_thread > NPS_MAX)
             {
-                Node cur(nodes.size(), word);
-                for(auto &node : nodes)
-                {
-                    cur.tryToAddNeighbor(node);
-                }
-                nodes.push_back(cur);
+                thread_count = words_count / (NPS_MAX - 1) + 1;
+                nodes_per_thread = NPS_MAX;
             }
-            // auto endTime = std::chrono::high_resolution_clock::now() - startTime;
-            // std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
+//            std::wcout << "Threads avaliable: " << thread_count << std::endl;
+//            std::wcout << "Words count: " << words_count << std::endl;
+//            std::wcout << "Nodes per thread: " << nodes_per_thread << std::endl;
+            std::vector<std::thread> threads;
+            for(size_t i = 0; i < thread_count; ++i)
+            {
+                size_t start = i * nodes_per_thread;
+                size_t end = start + nodes_per_thread;
+                if(end > words_count)
+                {
+                    end = words_count;
+                }
+                auto fnk = [this](size_t start, size_t end) -> void
+                {
+//                    std::wcout << "START: from " << start << " to " << (end - 1) << std::endl;
+                    for(size_t i = start; i < end; ++i)
+                    {
+                        auto &ni = nodes[i];
+                        for(size_t j = 0; j < i; ++j)
+                        {
+                            auto &nj = nodes[j];
+                            if(ni.isOneLetterDiff(nj))
+                            {
+                                ni.addNeighbor(nj);
+                            }
+                        }
+                    }
+//                    std::wcout << "STOP: from " << start << " to " << (end - 1) << std::endl;
+                };
+                threads.push_back(std::thread(fnk, start, end));
+            }
+            for(auto &thread : threads)
+            {
+                thread.join();
+            }
+
+            auto endTime = std::chrono::high_resolution_clock::now() - startTime;
+            std::wcout << "Graph build: " << std::chrono::duration_cast<std::chrono::microseconds>(endTime).count() << " microseconds" << std::endl;
         }
     }
 
