@@ -306,7 +306,7 @@ public:
         #if USE_CODECVT
             std::locale ru(std::locale(), new std::codecvt_utf8<wchar_t>);
         #else
-            std::locale ru("en_US.UTF-8")
+            std::locale ru("en_US.UTF-8");
         #endif
         input.imbue(ru);
         if(input.is_open())
@@ -388,11 +388,12 @@ void printUsage(char *str)
 
 int main(int argc, char *argv[])
 {
-    std::setlocale(LC_ALL, "Russian");
     #if USE_CODECVT
+        std::setlocale(LC_ALL, "Russian");
         std::locale ru(std::locale(), new std::codecvt_utf8<wchar_t>());
     #else
-        std::locale ru("en_US.UTF-8")
+        std::setlocale(LC_ALL, "en_US.UTF-8");
+        std::locale ru("en_US.UTF-8");
     #endif
 
     if(argc < 3)
